@@ -1,16 +1,73 @@
-alert("NEW SCRIPT LOADED");
+const token = localStorage.getItem("token");
 
-function formatResponse(text) {
-    return text
-        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
-        .replace(/\n/g, "<br>");
+if (!token) {
+    window.location.href = "/login";
 }
 
 const sendBtn = document.getElementById("send-btn");
 const input = document.getElementById("user-input");
 const chatBox = document.getElementById("chat-box");
+const historyBox = document.getElementById("history");
 
-sendBtn.onclick = async () => {
+// Logout
+document.getElementById("logout-btn").onclick = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+};
+
+// New Chat
+document.getElementById("new-chat-btn").onclick = () => {
+    chatBox.innerHTML = "";
+};
+
+// Format AI Response
+function formatResponse(text) {
+
+    if (!text) return "";
+
+    return text
+        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+        .replace(/\n/g, "<br>");
+
+}
+
+// Load Chat History
+async function loadHistory() {
+
+    try {
+
+        const response = await fetch("/ai/history", {
+            headers: {
+                Authorization: "Bearer " + token
+            }
+        });
+
+        if (!response.ok) return;
+
+        const chats = await response.json();
+
+        historyBox.innerHTML = "";
+
+        chats.reverse().forEach(chat => {
+
+            historyBox.innerHTML += `
+                <div class="history-item">
+                    ${chat.question}
+                </div>
+            `;
+
+        });
+
+    } catch (err) {
+
+        console.log(err);
+
+    }
+
+}
+
+// Send Message
+async function sendMessage() {
 
     const message = input.value.trim();
 
@@ -18,88 +75,94 @@ sendBtn.onclick = async () => {
 
     chatBox.innerHTML += `
         <div class="user">
-            <b>You:</b> ${message}
+            <b>You:</b><br>${message}
         </div>
     `;
 
     input.value = "";
 
-    const typing = document.createElement("div");
-    typing.className = "bot";
-    typing.id = "typing";
-    typing.innerHTML = "🤖 <b>AI is typing...</b>";
+    chatBox.innerHTML += `
+        <div class="bot" id="typing">
+            🤖 AI is typing...
+        </div>
+    `;
 
-    chatBox.appendChild(typing);
     chatBox.scrollTop = chatBox.scrollHeight;
-
-    const token = localStorage.getItem("token");
-
-    console.log("TOKEN =", token);
-    console.log("Sending Authorization =", "Bearer " + token);
 
     try {
 
         const response = await fetch("/ai/chat", {
+
             method: "POST",
 
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + token
+                Authorization: "Bearer " + token
             },
 
             body: JSON.stringify({
                 message: message
             })
-        });
 
-        console.log("STATUS =", response.status);
+        });
 
         const data = await response.json();
 
-        console.log("DATA =", data);
+        const typing = document.getElementById("typing");
 
-        document.getElementById("typing").remove();
+        if (typing) {
+            typing.remove();
+        }
 
         if (!response.ok) {
 
             chatBox.innerHTML += `
                 <div class="bot">
-                    <b>❌ Error:</b><br>
-                    ${JSON.stringify(data)}
+                    ❌ ${JSON.stringify(data)}
                 </div>
             `;
 
             return;
+
         }
 
         chatBox.innerHTML += `
             <div class="bot">
-                <b>🤖 AI:</b><br>
+                <b>🤖 AI:</b><br><br>
                 ${formatResponse(data.response)}
             </div>
         `;
 
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        loadHistory();
+
     } catch (err) {
 
-        document.getElementById("typing").remove();
+        const typing = document.getElementById("typing");
 
-        console.error(err);
+        if (typing) {
+            typing.remove();
+        }
 
         chatBox.innerHTML += `
             <div class="bot">
-                <b>❌ Error:</b><br>
-                ${err}
+                Error: ${err}
             </div>
         `;
+
     }
 
-    chatBox.scrollTop = chatBox.scrollHeight;
-};
+}
 
-input.addEventListener("keypress", function(event) {
+sendBtn.onclick = sendMessage;
 
-    if (event.key === "Enter") {
-        sendBtn.click();
+input.addEventListener("keypress", function(e){
+
+    if(e.key === "Enter"){
+        sendMessage();
     }
 
 });
+
+loadHistory();

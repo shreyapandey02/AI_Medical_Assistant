@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - AI Medical Assistant</title>
+    <title>AI Medical Assistant</title>
 
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -11,79 +11,53 @@
 
 <div class="container">
 
-    <h1>🔐 Login</h1>
+    <!-- Sidebar -->
+    <div class="sidebar">
 
-    <input
-        type="email"
-        id="email"
-        placeholder="Enter Email">
+        <h2>🩺 AI Medical Assistant</h2>
 
-    <input
-        type="password"
-        id="password"
-        placeholder="Enter Password">
+        <button id="new-chat-btn">
+            + New Chat
+        </button>
 
-    <button id="login-btn">
-        Login
-    </button>
+        <div id="history"></div>
 
-    <p id="message"></p>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-area">
+
+        <div class="chat-header">
+
+            <h2>Medical Assistant</h2>
+
+            <button id="logout-btn">
+                Logout
+            </button>
+
+        </div>
+
+        <div id="chat-box"></div>
+
+        <div class="input-area">
+
+            <input
+                type="text"
+                id="user-input"
+                placeholder="Ask your medical question..."
+            >
+
+            <button id="send-btn">
+                Send
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
 
-<script>
-
-// Agar user pehle se login hai to direct chat page par bhejo
-if(localStorage.getItem("token")){
-    window.location.href="/chat";
-}
-
-document.getElementById("login-btn").onclick = async () => {
-
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-
-    if(email==="" || password===""){
-        document.getElementById("message").innerHTML =
-        "Please enter email and password.";
-        return;
-    }
-
-    const formData = new URLSearchParams();
-
-    formData.append("username", email);
-    formData.append("password", password);
-
-    const response = await fetch("/user/login", {
-
-        method: "POST",
-
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-
-        body: formData
-
-    });
-
-    const data = await response.json();
-
-    if(response.ok && data.access_token){
-
-        localStorage.setItem("token", data.access_token);
-
-        window.location.href="/chat";
-
-    }else{
-
-        document.getElementById("message").innerHTML =
-        data.detail || data.message || "Login Failed";
-
-    }
-
-}
-
-</script>
+<script src="/static/script.js"></script>
 
 </body>
 </html>

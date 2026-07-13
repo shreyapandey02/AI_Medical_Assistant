@@ -42,4 +42,6 @@ body{
     margin-bottom:20px;
 }
 
-#new-chat-btn:hover
+#new-chat-btn:hover{
+    background:#1d4ed8;
+}

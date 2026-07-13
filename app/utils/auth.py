@@ -39,9 +39,13 @@ def get_current_user(
             raise credentials_exception
 
     except Exception as e:
-        print("JWT ERROR:", e)
-        raise credentials_exception
+        import traceback
 
+        print("JWT ERROR:", repr(e))
+        traceback.print_exc()
+
+        raise credentials_exception
+    
     user = db.query(User).filter(
         User.email == email
     ).first()
