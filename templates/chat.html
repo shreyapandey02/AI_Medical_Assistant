@@ -5,27 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Medical Assistant</title>
 
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/chat.css">
 </head>
+
 <body>
 
 <div class="container">
 
     <!-- Sidebar -->
-    <div class="sidebar">
+    <aside class="sidebar">
 
         <h2>🩺 AI Medical Assistant</h2>
 
-        <button id="new-chat-btn">
-            + New Chat
-        </button>
+        <button id="new-chat-btn">+ New Chat</button>
+
+        <input
+            id="search-chat"
+            type="text"
+            placeholder="🔍 Search chats..."
+        >
 
         <div id="history"></div>
 
-    </div>
+    </aside>
 
-    <!-- Chat Area -->
-    <div class="chat-area">
+    <!-- Main Chat -->
+    <main class="chat-area">
 
         <div class="chat-header">
 
@@ -42,8 +47,8 @@
         <div class="input-area">
 
             <input
-                type="text"
                 id="user-input"
+                type="text"
                 placeholder="Ask your medical question..."
             >
 
@@ -53,7 +58,7 @@
 
         </div>
 
-    </div>
+    </main>
 
 </div>
 

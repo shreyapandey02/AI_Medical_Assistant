@@ -40,7 +40,15 @@ def get_chat_history(
         .all()
     )
 
-    return chats
+    return [
+    {
+        "id": chat.id,
+        "question": chat.question,
+        "answer": chat.answer,
+        "created_at": chat.created_at.strftime("%d-%m-%Y %I:%M %p")
+    }
+    for chat in chats
+]
 
 
 @router.delete("/delete/{chat_id}")

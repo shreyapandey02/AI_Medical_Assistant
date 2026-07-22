@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,31 +7,29 @@
 
     <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
 
-    <div class="container">
+<div class="login-container">
 
-        <h1>🩺 AI Medical Assistant</h1>
+    <h1>🩺 AI Medical Assistant</h1>
 
-        <div id="chat-box"></div>
+    <p style="text-align:center; margin-bottom:25px; color:#555; line-height:1.6;">
+        Your intelligent healthcare assistant.<br>
+        Ask medical questions and receive AI-powered guidance instantly.
+    </p>
 
-        <div class="input-area">
-            <input
-                id="user-input"
-                type="text"
-                placeholder="Ask a medical question..."
-            >
+    <button onclick="window.location.href='/login'">
+        Login
+    </button>
 
-            <button id="send-btn">
-                Send
-            </button>
-        </div>
+    <br><br>
 
-    </div>
+    <button onclick="window.location.href='/register'"
+        style="background:#10b981;">
+        Register
+    </button>
 
-    <script src="/static/script.js"></script>
+</div>
 
 </body>
-
 </html>

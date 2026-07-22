@@ -25,9 +25,33 @@ function formatResponse(text) {
 
     if (!text) return "";
 
+    text = text
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/?b>/gi, "**");
+
     return text
         .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
-        .replace(/\n/g, "<br>");
+        .replace(/\n/g, "<br>")
+        .replace(/^\*\s/gm, "• ");
+
+}
+
+async function typeMessage(element, text) {
+
+    let formatted = formatResponse(text);
+
+    let current = "";
+
+    for (let i = 0; i < formatted.length; i++) {
+
+        current += formatted.charAt(i);
+
+        element.innerHTML = current;
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        await new Promise(resolve => setTimeout(resolve, 8));
+    }
 
 }
 
@@ -50,19 +74,106 @@ async function loadHistory() {
 
         chats.reverse().forEach(chat => {
 
-            historyBox.innerHTML += `
-                <div class="history-item">
-                    ${chat.question}
-                </div>
-            `;
+    historyBox.innerHTML += `
+    <div class="history-item"
+        onclick="openChat(${chat.id})">
 
-        });
+        <span class="history-text">
+            ${chat.question}
+        </span>
+
+        <button
+            class="delete-btn"
+            onclick="event.stopPropagation(); deleteChat(${chat.id})">
+            🗑️
+        </button>
+
+    </div>
+    `;
+});
+
 
     } catch (err) {
 
         console.log(err);
 
     }
+
+}
+
+async function deleteChat(chatId) {
+
+    const ok = confirm("Delete this chat?");
+
+    if (!ok) return;
+
+    try {
+
+        const response = await fetch(`/ai/delete/${chatId}`, {
+
+            method: "DELETE",
+
+            headers: {
+                Authorization: "Bearer " + token
+            }
+
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+
+            alert(data.detail || "Unable to delete chat.");
+            return;
+
+        }
+
+        loadHistory();
+
+    } catch (err) {
+
+        console.log(err);
+        alert("Something went wrong.");
+
+    }
+
+}
+
+function openChat(chatId){
+
+    fetch("/ai/history",{
+        headers:{
+            Authorization:"Bearer "+token
+        }
+    })
+
+    .then(res=>res.json())
+
+    .then(chats=>{
+
+        const chat=chats.find(c=>c.id===chatId);
+
+        if(!chat) return;
+
+        chatBox.innerHTML = `
+        <div class="user">
+            <b>You:</b><br>${chat.question}
+            <div class="time">
+                ${new Date(chat.created_at).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                })}
+            </div>
+        </div>
+
+        <div class="bot">
+            <b>🤖 AI:</b><br><br>
+            ${formatResponse(chat.answer)}
+            <div class="time">${chat.created_at}</div>
+        </div>
+        `;
+
+    });
 
 }
 
@@ -73,13 +184,19 @@ async function sendMessage() {
 
     if (message === "") return;
 
-    chatBox.innerHTML += `
-        <div class="user">
-            <b>You:</b><br>${message}
-        </div>
-    `;
+    sendBtn.disabled = true;
+    sendBtn.innerText = "Generating...";
+    input.disabled = true;
 
-    input.value = "";
+    chatBox.innerHTML += `
+    <div class="user">
+        <b>You:</b><br>${message}
+        <div class="time">${new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        })}</div>
+    </div>
+    `;
 
     chatBox.innerHTML += `
         <div class="bot" id="typing">
@@ -107,6 +224,10 @@ async function sendMessage() {
         });
 
         const data = await response.json();
+        
+        console.log("Status:", response.status);
+        console.log("Data:", data);
+        console.log("Response field:", data.response);
 
         const typing = document.getElementById("typing");
 
@@ -126,16 +247,34 @@ async function sendMessage() {
 
         }
 
-        chatBox.innerHTML += `
-            <div class="bot">
+       chatBox.innerHTML += `
+        <div class="bot">
                 <b>🤖 AI:</b><br><br>
-                ${formatResponse(data.response)}
-            </div>
+                <div id="ai-response"></div>
+                <div class="time">${new Date().toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                })}</div>
+        </div>
         `;
+
+        const aiBox = document.getElementById("ai-response");
+
+        await typeMessage(aiBox, data.response);
+
+        sendBtn.disabled = false;
+        sendBtn.innerText = "Send";
+        input.disabled = false;
+        input.focus();
 
         chatBox.scrollTop = chatBox.scrollHeight;
 
         loadHistory();
+
+        sendBtn.disabled = false;
+        sendBtn.innerText = "Send";
+        input.disabled = false;
+        input.focus();
 
     } catch (err) {
 
@@ -157,12 +296,15 @@ async function sendMessage() {
 
 sendBtn.onclick = sendMessage;
 
-input.addEventListener("keypress", function(e){
+input.addEventListener("keydown", function(e) {
 
-    if(e.key === "Enter"){
+    if (e.key === "Enter") {
+        e.preventDefault();
         sendMessage();
     }
 
 });
 
 loadHistory();
+
+input.focus();
